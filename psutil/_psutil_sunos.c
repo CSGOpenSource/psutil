@@ -696,6 +696,7 @@ error:
 static PyObject *
 psutil_net_io_counters(PyObject *self, PyObject *args)
 {
+    char name[250];
     kstat_ctl_t    *kc = NULL;
     kstat_t *ksp;
     kstat_named_t *rbytes, *wbytes, *rpkts, *wpkts, *ierrs, *oerrs;
@@ -722,7 +723,7 @@ psutil_net_io_counters(PyObject *self, PyObject *args)
             (strcmp(ksp->ks_module, "lo") != 0)) {
             goto skip;
         */
-        if ((strcmp(ksp->ks_module, "link") != 0)) {
+        if ((strcmp(ksp->ks_module, "link") != 0) && (strcmp(ksp->ks_name, "mac") != 0)) {
             goto next;
         }
 
@@ -741,33 +742,41 @@ psutil_net_io_counters(PyObject *self, PyObject *args)
         if ((rbytes == NULL) || (wbytes == NULL) || (rpkts == NULL) ||
                 (wpkts == NULL) || (ierrs == NULL) || (oerrs == NULL))
         {
-            PyErr_SetString(PyExc_RuntimeError, "kstat_data_lookup() failed");
-            goto error;
+            //PyErr_SetString(PyExc_RuntimeError, "kstat_data_lookup() failed");
+            goto next;
         }
-
-#if defined(_INT64_TYPE)
-        py_ifc_info = Py_BuildValue("(KKKKkkii)",
-                                    rbytes->value.ui64,
-                                    wbytes->value.ui64,
-                                    rpkts->value.ui64,
-                                    wpkts->value.ui64,
-                                    ierrs->value.ui32,
-                                    oerrs->value.ui32,
-#else
-        py_ifc_info = Py_BuildValue("(kkkkkkii)",
-                                    rbytes->value.ui32,
-                                    wbytes->value.ui32,
-                                    rpkts->value.ui32,
-                                    wpkts->value.ui32,
-                                    ierrs->value.ui32,
-                                    oerrs->value.ui32,
-#endif
-                                    0,  // dropin not supported
-                                    0   // dropout not supported
-                                   );
+		
+		if (rbytes->data_type == KSTAT_DATA_INT64 || rbytes->data_type == KSTAT_DATA_UINT64)
+		{
+			py_ifc_info = Py_BuildValue("(KKKKkkii)",
+										rbytes->value.ui64,
+										wbytes->value.ui64,
+										rpkts->value.ui64,
+										wpkts->value.ui64,
+										ierrs->value.ui32,
+										oerrs->value.ui32,
+										0,  // dropin not supported
+										0   // dropout not supported
+									   );
+		}
+		else
+		{
+			py_ifc_info = Py_BuildValue("(kkkkkkii)",
+										rbytes->value.ui32,
+										wbytes->value.ui32,
+										rpkts->value.ui32,
+										wpkts->value.ui32,
+										ierrs->value.ui32,
+										oerrs->value.ui32,
+										0,  // dropin not supported
+										0   // dropout not supported
+									   );
+		}
+		
         if (!py_ifc_info)
             goto error;
-        if (PyDict_SetItemString(py_retdict, ksp->ks_name, py_ifc_info))
+		sprintf(name, "%s:%d", ksp->ks_name, ksp->ks_instance);
+        if (PyDict_SetItemString(py_retdict, name, py_ifc_info))
             goto error;
         Py_DECREF(py_ifc_info);
         goto next;
