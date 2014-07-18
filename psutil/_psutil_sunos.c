@@ -723,7 +723,7 @@ psutil_net_io_counters(PyObject *self, PyObject *args)
             (strcmp(ksp->ks_module, "lo") != 0)) {
             goto skip;
         */
-        if ((strcmp(ksp->ks_module, "link") != 0) && (strcmp(ksp->ks_name, "mac") != 0)) {
+        if (strcmp(ksp->ks_name, "mac") != 0) {
             goto next;
         }
 
@@ -775,7 +775,7 @@ psutil_net_io_counters(PyObject *self, PyObject *args)
 		
         if (!py_ifc_info)
             goto error;
-		sprintf(name, "%s:%d", ksp->ks_name, ksp->ks_instance);
+		sprintf(name, "%s%d:%s", ksp->ks_module, ksp->ks_instance, ksp->ks_name);
         if (PyDict_SetItemString(py_retdict, name, py_ifc_info))
             goto error;
         Py_DECREF(py_ifc_info);
