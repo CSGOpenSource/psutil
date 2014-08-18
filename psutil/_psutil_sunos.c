@@ -732,10 +732,10 @@ psutil_net_io_counters(PyObject *self, PyObject *args)
             continue;
         }
 
-        rbytes = (kstat_named_t *)kstat_data_lookup(ksp, "rbytes");
-        wbytes = (kstat_named_t *)kstat_data_lookup(ksp, "obytes");
-        rpkts = (kstat_named_t *)kstat_data_lookup(ksp, "ipackets");
-        wpkts = (kstat_named_t *)kstat_data_lookup(ksp, "opackets");
+        rbytes = (kstat_named_t *)kstat_data_lookup(ksp, "rbytes64");
+        wbytes = (kstat_named_t *)kstat_data_lookup(ksp, "obytes64");
+        rpkts = (kstat_named_t *)kstat_data_lookup(ksp, "ipackets64");
+        wpkts = (kstat_named_t *)kstat_data_lookup(ksp, "opackets64");
         ierrs = (kstat_named_t *)kstat_data_lookup(ksp, "ierrors");
         oerrs = (kstat_named_t *)kstat_data_lookup(ksp, "oerrors");
 
